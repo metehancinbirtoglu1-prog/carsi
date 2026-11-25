@@ -1,0 +1,682 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Çarşı</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--page:#E5E7EB;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--page:#0b0f14}}
+:root[data-theme="dark"]{--page:#0b0f14}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:var(--page)}
+*{box-sizing:border-box}
+body{font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#111827}
+#root{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;background:#F6F7F9}
+.tap:active{opacity:.6}
+</style></head><body><div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+(function(){
+const {View,Text,TextInput,ScrollView,FlatList,TouchableOpacity,Modal,Switch,Image,Alert,StyleSheet,SafeAreaView,Platform,StatusBar,ImagePicker}=(function(){
+const h=React.createElement;
+const UNIT={flex:1,flexGrow:1,flexShrink:1,fontWeight:1,opacity:1,zIndex:1};
+function flat(st,o){if(!st)return o;if(Array.isArray(st)){st.forEach(x=>flat(x,o));return o;}Object.assign(o,st);return o;}
+function css(st){
+  const r=flat(st,{}),o={};let bw=false;
+  const px=(k,v)=>typeof v==='number'&&!UNIT[k]?v+'px':v;
+  for(const k in r){const v=r[k];if(v==null)continue;
+    if(k==='paddingHorizontal'){o.paddingLeft=o.paddingRight=px(k,v);}
+    else if(k==='paddingVertical'){o.paddingTop=o.paddingBottom=px(k,v);}
+    else if(k==='marginHorizontal'){o.marginLeft=o.marginRight=px(k,v);}
+    else if(k==='marginVertical'){o.marginTop=o.marginBottom=px(k,v);}
+    else if(k==='flex'){o.flexGrow=v;o.flexShrink=1;o.flexBasis='0%';}
+    else if(k==='textDecorationLine'){o.textDecoration=v;}
+    else{o[k]=px(k,v);if(/^border(Top|Bottom|Left|Right)?Width$/.test(k))bw=true;}
+  }
+  return bw?Object.assign({borderStyle:'solid',borderWidth:o.borderWidth!==undefined?o.borderWidth:0},o):o;
+}
+const BASE={display:'flex',flexDirection:'column',boxSizing:'border-box',position:'relative',minWidth:0,minHeight:0,flexShrink:0};
+const View=({style,children})=>h('div',{style:Object.assign({},BASE,css(style))},children);
+const Text=({style,children,numberOfLines,onPress})=>h('span',{onClick:onPress,style:Object.assign({minWidth:0,cursor:onPress?'pointer':undefined},numberOfLines?{display:'block',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}:{},css(style))},children);
+const TouchableOpacity=({style,children,onPress,disabled})=>h('div',{className:'tap',role:'button',onClick:disabled?undefined:onPress,style:Object.assign({},BASE,{cursor:disabled?'default':'pointer',userSelect:'none'},css(style))},children);
+const TextInput=({style,value,onChangeText,placeholder,keyboardType,secureTextEntry,multiline,onFocus,onSubmitEditing})=>{
+  const common={value:value,placeholder:placeholder,onFocus:onFocus,onChange:e=>onChangeText&&onChangeText(e.target.value),style:Object.assign({font:'inherit',outline:'none',boxSizing:'border-box',minWidth:0,flexShrink:0},css(style))};
+  if(multiline)return h('textarea',Object.assign(common,{style:Object.assign({resize:'none'},common.style)}));
+  return h('input',Object.assign(common,{type:secureTextEntry?'password':'text',inputMode:keyboardType==='numeric'?'numeric':undefined,onKeyDown:e=>{if(e.key==='Enter'&&onSubmitEditing)onSubmitEditing();}}));
+};
+const ScrollView=({style,contentContainerStyle,horizontal,children})=>h('div',{style:Object.assign({},BASE,{flexGrow:horizontal?0:1,flexShrink:horizontal?0:1,flexBasis:'auto'},horizontal?{overflowX:'auto',overflowY:'hidden'}:{overflowY:'auto',overflowX:'hidden'},css(style))},
+  h('div',{style:Object.assign({},BASE,{flexDirection:horizontal?'row':'column',flexShrink:0},css(contentContainerStyle))},children));
+const FlatList=({data,renderItem,keyExtractor,numColumns=1,contentContainerStyle,ListEmptyComponent,style})=>{
+  const items=data.map((item,index)=>({item,index,key:keyExtractor?keyExtractor(item,index):index}));
+  let body;
+  if(!items.length)body=ListEmptyComponent||null;
+  else if(numColumns>1){
+    const cell={flexGrow:1,flexShrink:1,flexBasis:'0%'};const rows=[];
+    for(let i=0;i<items.length;i+=numColumns)rows.push(items.slice(i,i+numColumns));
+    body=rows.map((r,ri)=>h('div',{key:ri,style:Object.assign({},BASE,{flexDirection:'row'})},
+      r.map(x=>h('div',{key:x.key,style:Object.assign({},BASE,cell)},renderItem({item:x.item,index:x.index}))),
+      Array.from({length:numColumns-r.length},(_,k)=>h('div',{key:'p'+k,style:Object.assign({},BASE,cell)}))));
+  } else body=items.map(x=>h(React.Fragment,{key:x.key},renderItem({item:x.item,index:x.index})));
+  return h(ScrollView,{style:style,contentContainerStyle:contentContainerStyle},body);
+};
+const Modal=({visible,children})=>visible?h('div',{style:{position:'fixed',top:0,right:0,bottom:0,left:0,zIndex:100,display:'flex',flexDirection:'column',background:'#fff',maxWidth:520,margin:'0 auto'}},children):null;
+const Switch=({value,onValueChange})=>h('input',{type:'checkbox',checked:!!value,onChange:e=>onValueChange(e.target.checked),style:{width:22,height:22,accentColor:'#0F766E'}});
+const Image=({source,style})=>h('img',{src:source&&source.uri,style:Object.assign({width:'100%',objectFit:'cover',display:'block',flexShrink:0},css(style))});
+const Alert={alert:(t,m)=>window.alert(m?t+'\n\n'+m:t)};
+const shrink=f=>new Promise(r=>{const fr=new FileReader();fr.onerror=()=>r('');fr.onload=()=>{const im=new window.Image();im.onerror=()=>r(fr.result);im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(im.width*k));cv.height=Math.max(1,Math.round(im.height*k));cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);r(cv.toDataURL('image/jpeg',0.75));};im.src=fr.result;};fr.readAsDataURL(f);});
+const ImagePicker={MediaTypeOptions:{Images:'Images'},launchImageLibraryAsync:()=>new Promise(res=>{
+  const i=document.createElement('input');i.type='file';i.accept='image/*';i.multiple=true;i.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';
+  document.body.appendChild(i);
+  const done=v=>{res(v);setTimeout(()=>i.remove(),0);};
+  i.onchange=()=>{const files=Array.from(i.files||[]);if(!files.length)return done({canceled:true,assets:[]});
+    Promise.all(files.map(shrink)).then(u=>done({canceled:false,assets:u.filter(Boolean).map(uri=>({uri}))}));};
+  i.addEventListener('cancel',()=>done({canceled:true,assets:[]}));
+  i.click();})};
+return {View,Text,TextInput,ScrollView,FlatList,TouchableOpacity,Modal,Switch,Image,Alert,StyleSheet:{create:x=>x},SafeAreaView:View,Platform:{OS:'web'},StatusBar:{currentHeight:0},ImagePicker};
+})();
+const {useState,useMemo,useEffect,createContext,useContext}=React;
+
+"use strict";
+// ===== src/data.js =====
+const h = (n) => Date.now() - n * 36e5;
+const USERS = [
+    { id: 'u1', name: 'Sen (Demo)', city: 'İstanbul', bio: 'Demo hesabı', verified: true, fast: true },
+    { id: 'u2', name: 'Ayşe Demir', city: 'Ankara', bio: 'Temiz ve bakımlı ürünler satarım.', verified: true, fast: true },
+    { id: 'u3', name: 'Mehmet Kaya', city: 'İzmir', bio: 'Koleksiyoncu.', verified: false, fast: false },
+];
+const CATS = {
+    Elektronik: ['Telefon', 'Bilgisayar', 'Kulaklık'], 'Giyim & Aksesuar': ['Ceket', 'Ayakkabı', 'Çanta'],
+    'Ev & Yaşam': ['Mobilya', 'Mutfak'], 'Hobi & Koleksiyon': ['Oyun', 'Koleksiyon'],
+    'Spor & Outdoor': ['Bisiklet', 'Kamp'], 'Araç & Parça': ['Lastik', 'Aksesuar'],
+    'Kitap/Müzik': ['Kitap', 'Plak'], Diğer: ['Diğer'],
+};
+const EMOJI = { Elektronik: '📱', 'Giyim & Aksesuar': '👕', 'Ev & Yaşam': '🛋️', 'Hobi & Koleksiyon': '🎮', 'Spor & Outdoor': '🚲', 'Araç & Parça': '🛞', 'Kitap/Müzik': '📚', Diğer: '📦' };
+const CONDS = ['Yeni Gibi', 'Çok İyi', 'İyi', 'Orta / Kullanılmış', 'Parça Niyetine / Tamirlik'];
+const CITIES = { İstanbul: ['Kadıköy', 'Beşiktaş'], Ankara: ['Çankaya', 'Keçiören'], İzmir: ['Karşıyaka', 'Bornova'] };
+const RATES = { TL: 1, USD: 35, EUR: 38 };
+const PTYPES = ['Sabit Fiyat', 'Pazarlığa Açık', 'Takasa Açık', 'Ücretsiz'];
+const SHIPS = ['Alıcı Öder', 'Satıcı Öder', 'Elden Teslim'];
+const TAGS = {
+    seller: ['Ürün anlatıldığı gibiydi', 'İletişimi çok iyi', 'Hızlı ve özenli teslim'],
+    buyer: ['Sözünde durdu', 'Sorunsuz ödeme/teslim', 'İletişimi iyi'],
+};
+const L = (id, title, cat, sub, state, cond, price, cur, ptype, ship, city, district, km, sellerId, age, fav, desc, oldPrice = null) => ({
+    id, title, cat, sub, state, cond, price, cur, ptype, ship, city, district, km, sellerId, desc, oldPrice,
+    createdAt: h(age), status: 'active', favCount: fav, images: [], featured: false, history: [{ price, at: h(age) }],
+});
+const LISTINGS = [];
+const R = (id, from, to, role, stars, text) => ({ id, txId: 'seed', fromId: from, toId: to, role, stars, text, tags: [], at: h(100) });
+const REVIEWS = [];
+// ===== src/filter.js =====
+const DEF = { cat: null, sub: null, min: '', max: '', bargain: false, swap: false, free: false, state: 'all', conds: [], city: null, district: null, km: null, deliver: null, minRating: 0, date: null };
+const SORTS = [['smart', 'Önerilen'], ['new', 'En Yeni'], ['old', 'En Eski'], ['pa', 'Fiyat ↑'], ['pd', 'Fiyat ↓'], ['near', 'En Yakın'], ['rating', 'Satıcı Puanı'], ['fav', 'En Favori']];
+const activeCount = (f) => Object.keys(DEF).filter((k) => JSON.stringify(f[k]) !== JSON.stringify(DEF[k])).length;
+const toTL = (l) => l.price * RATES[l.cur];
+function run(list, f, q, sort, stats) {
+    const now = Date.now();
+    q = q.trim().toLowerCase();
+    let r = list.filter((l) => l.status === 'active');
+    if (q)
+        r = r.filter((l) => (l.title + ' ' + l.desc).toLowerCase().includes(q));
+    if (f.cat)
+        r = r.filter((l) => l.cat === f.cat);
+    if (f.sub)
+        r = r.filter((l) => l.sub === f.sub);
+    if (f.min !== '')
+        r = r.filter((l) => toTL(l) >= +f.min);
+    if (f.max !== '')
+        r = r.filter((l) => toTL(l) <= +f.max);
+    if (f.bargain)
+        r = r.filter((l) => l.ptype === 'Pazarlığa Açık');
+    if (f.swap)
+        r = r.filter((l) => l.ptype === 'Takasa Açık');
+    if (f.free)
+        r = r.filter((l) => l.ptype === 'Ücretsiz');
+    if (f.state !== 'all')
+        r = r.filter((l) => l.state === f.state);
+    if (f.conds.length)
+        r = r.filter((l) => l.state === 'İkinci El' && f.conds.includes(l.cond));
+    if (f.city)
+        r = r.filter((l) => l.city === f.city);
+    if (f.district)
+        r = r.filter((l) => l.district === f.district);
+    if (f.km)
+        r = r.filter((l) => l.km <= f.km);
+    if (f.deliver === 'Elden Teslim')
+        r = r.filter((l) => l.ship === 'Elden Teslim');
+    if (f.deliver === 'Kargo ile Gönderim')
+        r = r.filter((l) => l.ship !== 'Elden Teslim');
+    if (f.deliver === 'Ücretsiz Kargo')
+        r = r.filter((l) => l.ship === 'Satıcı Öder');
+    if (f.minRating)
+        r = r.filter((l) => stats(l.sellerId).avg >= f.minRating);
+    if (f.date)
+        r = r.filter((l) => now - l.createdAt <= f.date * 864e5);
+    const score = (l) => (l.featured ? 1e6 : 0) + l.favCount * 2 + stats(l.sellerId).avg * 10 - (now - l.createdAt) / 864e5;
+    const cmp = { smart: (a, b) => score(b) - score(a), new: (a, b) => b.createdAt - a.createdAt, old: (a, b) => a.createdAt - b.createdAt, pa: (a, b) => toTL(a) - toTL(b), pd: (a, b) => toTL(b) - toTL(a), near: (a, b) => a.km - b.km, rating: (a, b) => stats(b.sellerId).avg - stats(a.sellerId).avg, fav: (a, b) => b.favCount - a.favCount }[sort];
+    return [...r].sort(cmp);
+}
+// ===== src/components.js =====
+const c = { p: '#0F766E', bg: '#F6F7F9', card: '#fff', t: '#111827', m: '#6B7280', line: '#E5E7EB', red: '#DC2626', star: '#F59E0B', soft: '#E6F4F2' };
+const fmt = (p, cur = 'TL') => (p === 0 ? 'Ücretsiz' : `${Number(p).toLocaleString('tr-TR')} ${cur === 'TL' ? '₺' : cur === 'USD' ? '$' : '€'}`);
+const ago = (t) => { const h = (Date.now() - t) / 36e5; return h < 1 ? 'Az önce' : h < 24 ? `${Math.floor(h)} sa önce` : `${Math.floor(h / 24)} gün önce`; };
+const Btn = ({ t, onPress, kind, style }) => (React.createElement(TouchableOpacity, { onPress: onPress, style: [s.btn, kind === 'ghost' && s.ghost, kind === 'danger' && { backgroundColor: c.red }, style] },
+    React.createElement(Text, { style: [s.bt, kind === 'ghost' && { color: c.p }] }, t)));
+const Chip = ({ t, on, onPress }) => (React.createElement(TouchableOpacity, { onPress: onPress, style: [s.chip, on && { backgroundColor: c.p, borderColor: c.p }] },
+    React.createElement(Text, { style: { color: on ? '#fff' : c.t, fontSize: 13 } }, t)));
+const Stars = ({ v = 0, size = 16, onChange }) => (React.createElement(View, { style: { flexDirection: 'row' } }, [1, 2, 3, 4, 5].map((i) => (React.createElement(TouchableOpacity, { key: i, disabled: !onChange, onPress: () => onChange && onChange(i) },
+    React.createElement(Text, { style: { fontSize: size, color: i <= Math.round(v) ? c.star : '#D1D5DB' } }, "\u2605"))))));
+const Skeleton = () => (React.createElement(View, { style: [s.card, { padding: 0 }] },
+    React.createElement(View, { style: { height: 120, backgroundColor: '#E5E7EB', borderRadius: 12 } }),
+    React.createElement(View, { style: { padding: 10 } },
+        React.createElement(View, { style: { height: 12, width: '80%', backgroundColor: '#E5E7EB', marginBottom: 8 } }),
+        React.createElement(View, { style: { height: 12, width: '40%', backgroundColor: '#E5E7EB' } }))));
+const Empty = ({ icon = '🔍', t, sub }) => (React.createElement(View, { style: { alignItems: 'center', padding: 40 } },
+    React.createElement(Text, { style: { fontSize: 44 } }, icon),
+    React.createElement(Text, { style: { fontWeight: '700', fontSize: 16, marginTop: 8 } }, t),
+    sub ? React.createElement(Text, { style: { color: c.m, marginTop: 4, textAlign: 'center' } }, sub) : null));
+const Thumb = ({ l, h = 120 }) => l.images && l.images[0] ? React.createElement(Image, { source: { uri: l.images[0] }, style: { height: h, borderRadius: 12 } }) : (React.createElement(View, { style: { height: h, borderRadius: 12, backgroundColor: c.soft, alignItems: 'center', justifyContent: 'center' } },
+    React.createElement(Text, { style: { fontSize: h / 2.5 } }, EMOJI[l.cat])));
+const Price = ({ l, big }) => (React.createElement(View, { style: { flexDirection: 'row', alignItems: 'baseline', gap: 6 } },
+    React.createElement(Text, { style: { fontWeight: '800', fontSize: big ? 22 : 15, color: c.p } }, fmt(l.price, l.cur)),
+    l.oldPrice ? React.createElement(Text, { style: { textDecorationLine: 'line-through', color: c.m } }, fmt(l.oldPrice, l.cur)) : null));
+const ListingCard = ({ l, onPress, fav, onFav }) => (React.createElement(TouchableOpacity, { onPress: onPress, style: [s.card, { flex: 1, margin: 5, padding: 0 }] },
+    React.createElement(Thumb, { l: l }),
+    React.createElement(TouchableOpacity, { onPress: onFav, style: s.heart },
+        React.createElement(Text, null, fav ? '❤️' : '🤍')),
+    React.createElement(View, { style: { padding: 10 } },
+        React.createElement(Text, { numberOfLines: 1, style: { fontWeight: '600' } }, l.title),
+        React.createElement(Price, { l: l }),
+        React.createElement(Text, { style: { color: c.m, fontSize: 12, marginTop: 2 } },
+            l.state === 'Sıfır' ? 'Sıfır' : l.cond,
+            " \u2022 ",
+            l.district),
+        React.createElement(Text, { style: { color: c.m, fontSize: 11 } },
+            l.ptype,
+            " \u2022 ",
+            l.km,
+            " km"))));
+const OfferBubble = ({ m, mine, canAct, onAccept, onReject, onCounter, fmtAmt }) => (React.createElement(View, { style: [s.bubble, mine ? { alignSelf: 'flex-end', backgroundColor: c.p } : { alignSelf: 'flex-start', backgroundColor: '#fff' }] },
+    React.createElement(Text, { style: { color: mine ? '#fff' : c.t, fontWeight: '700' } }, m.type === 'swap' ? `🔁 Takas: ${m.text}` : `💰 Teklif: ${fmtAmt}`),
+    React.createElement(Text, { style: { color: mine ? '#D1FAE5' : c.m, fontSize: 12 } }, { pending: 'Bekliyor', accepted: 'Kabul edildi ✅', rejected: 'Reddedildi ❌', countered: 'Karşı teklif yapıldı' }[m.status]),
+    canAct && m.status === 'pending' ? (React.createElement(View, { style: { flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' } },
+        React.createElement(Btn, { t: "Kabul Et", onPress: onAccept, style: s.sm }),
+        React.createElement(Btn, { t: "Reddet", kind: "danger", onPress: onReject, style: s.sm }),
+        m.type === 'offer' ? React.createElement(Btn, { t: "Kar\u015F\u0131 Teklif", kind: "ghost", onPress: onCounter, style: s.sm }) : null)) : null));
+const s = StyleSheet.create({
+    btn: { backgroundColor: c.p, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, alignItems: 'center' },
+    ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: c.p },
+    bt: { color: '#fff', fontWeight: '700' }, sm: { paddingVertical: 6, paddingHorizontal: 10 },
+    chip: { borderWidth: 1, borderColor: c.line, backgroundColor: '#fff', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, marginRight: 6, marginBottom: 6 },
+    card: { backgroundColor: c.card, borderRadius: 12, padding: 12, marginBottom: 10, overflow: 'hidden' },
+    heart: { position: 'absolute', right: 8, top: 8, backgroundColor: '#fff', borderRadius: 16, padding: 6 },
+    bubble: { maxWidth: '80%', padding: 10, borderRadius: 14, marginVertical: 4 },
+    input: { backgroundColor: '#fff', borderWidth: 1, borderColor: c.line, borderRadius: 10, padding: 10, marginBottom: 8 },
+    h: { fontWeight: '700', fontSize: 15, marginVertical: 8 },
+});
+// ===== src/store.js =====
+const Ctx = createContext();
+const useStore = () => useContext(Ctx);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function Provider({ children }) {
+    const [meId, setMeId] = useState(null);
+    const [listings, setListings] = useState(LISTINGS);
+    const [favs, setFavs] = useState([]); // {u,l}
+    const [chats, setChats] = useState([]);
+    const [txs, setTxs] = useState([]);
+    const [reviews, setReviews] = useState(REVIEWS);
+    const [blocked, setBlocked] = useState([]);
+    const [notes, setNotes] = useState([]);
+    const users = USERS;
+    const note = (to, t) => setNotes((n) => [{ id: uid(), to, t }, ...n]);
+    const stats = (id) => {
+        const r = reviews.filter((x) => x.toId === id);
+        const avg = r.length ? r.reduce((a, x) => a + x.stars, 0) / r.length : 0;
+        return { avg: Math.round(avg * 10) / 10, count: r.length };
+    };
+    const badges = (id) => {
+        const u = users.find((x) => x.id === id), s = stats(id), b = [];
+        if (s.avg >= 4.5 && s.count >= 3)
+            b.push('Güvenilir Satıcı');
+        if (u.fast)
+            b.push('Hızlı Yanıt Veren');
+        if (u.verified)
+            b.push('Onaylı Hesap');
+        return b;
+    };
+    const patch = (id, p) => setListings((a) => a.map((x) => (x.id === id ? { ...x, ...p } : x)));
+    const A = {
+        me: users.find((u) => u.id === meId), users, allListings: listings,
+        listings: listings.filter((l) => !blocked.includes(l.sellerId)),
+        chats, txs, reviews, notes: notes.filter((n) => n.to === meId), stats, badges,
+        login: () => setMeId('u1'), logout: () => setMeId(null), switchUser: setMeId,
+        isFav: (id) => favs.some((f) => f.u === meId && f.l === id),
+        toggleFav: (id) => {
+            const on = favs.some((f) => f.u === meId && f.l === id);
+            setFavs((a) => (on ? a.filter((f) => !(f.u === meId && f.l === id)) : [...a, { u: meId, l: id }]));
+            patch(id, { favCount: listings.find((x) => x.id === id).favCount + (on ? -1 : 1) });
+        },
+        addListing: (l) => setListings((a) => [{ ...l, id: 'l' + uid(), sellerId: meId, createdAt: Date.now(), status: 'active', favCount: 0, featured: false, oldPrice: null, history: [{ price: l.price, at: Date.now() }] }, ...a]),
+        setPrice: (id, price) => {
+            const l = listings.find((x) => x.id === id);
+            patch(id, { price, oldPrice: price < l.price ? l.price : null, history: [...l.history, { price, at: Date.now() }] });
+            if (price < l.price)
+                favs.filter((f) => f.l === id).forEach((f) => note(f.u, `Fiyatı Düştü: ${l.title}`));
+        },
+        setStatus: (id, status) => patch(id, { status }),
+        feature: (id) => patch(id, { featured: true }),
+        openChat: (listingId) => {
+            const l = listings.find((x) => x.id === listingId);
+            let ch = chats.find((c) => c.listingId === listingId && c.buyerId === meId);
+            if (!ch) {
+                ch = { id: 'c' + uid(), listingId, buyerId: meId, sellerId: l.sellerId, msgs: [] };
+                setChats((a) => [...a, ch]);
+            }
+            return ch.id;
+        },
+        send: (chatId, m) => {
+            const ch = chats.find((c) => c.id === chatId);
+            setChats((a) => a.map((c) => (c.id === chatId ? { ...c, msgs: [...c.msgs, { id: uid(), from: meId, at: Date.now(), ...m }] } : c)));
+            note(ch.buyerId === meId ? ch.sellerId : ch.buyerId, m.type === 'offer' ? `Yeni teklif: ${m.amount}` : m.type === 'swap' ? 'Takas teklifi geldi' : 'Yeni mesaj');
+        },
+        respond: (chatId, msgId, status, amount) => {
+            const ch = chats.find((c) => c.id === chatId), m = ch.msgs.find((x) => x.id === msgId);
+            const other = m.from;
+            setChats((a) => a.map((c) => {
+                if (c.id !== chatId)
+                    return c;
+                const msgs = c.msgs.map((x) => (x.id === msgId ? { ...x, status } : x));
+                if (status === 'countered')
+                    msgs.push({ id: uid(), from: meId, at: Date.now(), type: 'offer', amount, status: 'pending' });
+                return { ...c, msgs };
+            }));
+            if (status === 'accepted') {
+                setTxs((a) => [...a, { id: 't' + uid(), listingId: ch.listingId, buyerId: ch.buyerId, sellerId: ch.sellerId, price: m.type === 'swap' ? 0 : m.amount, at: Date.now() }]);
+                patch(ch.listingId, { status: 'sold' });
+            }
+            note(other, status === 'accepted' ? 'Teklifin kabul edildi' : status === 'rejected' ? 'Teklifin reddedildi' : 'Karşı teklif geldi');
+        },
+        addReview: (txId, toId, stars, text, tags) => {
+            const tx = txs.find((t) => t.id === txId);
+            if (!tx || ![tx.buyerId, tx.sellerId].includes(meId))
+                return 'Sadece gerçekleşmiş işlemler değerlendirilebilir.';
+            if (reviews.some((r) => r.txId === txId && r.fromId === meId))
+                return 'Bu işlemi zaten değerlendirdin.';
+            if (!stars)
+                return 'Lütfen 1–5 arası yıldız seç.';
+            setReviews((a) => [...a, { id: uid(), txId, fromId: meId, toId, role: toId === tx.sellerId ? 'seller' : 'buyer', stars, text, tags, at: Date.now() }]);
+            return null;
+        },
+        report: () => Alert.alert('Şikayet alındı', 'İnceleme için moderasyon ekibine iletildi.'),
+        block: (id) => { setBlocked((a) => [...a, id]); Alert.alert('Engellendi', 'Bu kullanıcının ilanlarını artık görmeyeceksin.'); },
+    };
+    return React.createElement(Ctx.Provider, { value: A }, children);
+}
+// ===== src/screens/Home.js =====
+const POPULAR = ['iPhone', 'Bisiklet', 'Kulaklık', 'Ceket'];
+const Sec = ({ t, children }) => (React.createElement(View, null,
+    React.createElement(Text, { style: s.h }, t),
+    React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap' } }, children)));
+function FilterModal({ f, setF, show, close, count }) {
+    const set = (k, v) => setF({ ...f, [k]: v });
+    const tog = (k, v) => set(k, f[k] === v ? DEF[k] : v);
+    return (React.createElement(Modal, { visible: show, animationType: "slide", onRequestClose: close },
+        React.createElement(View, { style: { flex: 1, backgroundColor: c.bg, paddingTop: 40 } },
+            React.createElement(View, { style: { flexDirection: 'row', justifyContent: 'space-between', padding: 14 } },
+                React.createElement(Text, { style: { fontSize: 18, fontWeight: '800' } }, "Filtreler"),
+                React.createElement(TouchableOpacity, { onPress: () => setF(DEF) },
+                    React.createElement(Text, { style: { color: c.red } }, "T\u00FCm\u00FCn\u00FC temizle"))),
+            React.createElement(ScrollView, { contentContainerStyle: { padding: 14 } },
+                React.createElement(Sec, { t: "Kategori" }, Object.keys(CATS).map((k) => React.createElement(Chip, { key: k, t: k, on: f.cat === k, onPress: () => setF({ ...f, cat: f.cat === k ? null : k, sub: null }) }))),
+                f.cat ? React.createElement(Sec, { t: "Alt kategori" }, CATS[f.cat].map((k) => React.createElement(Chip, { key: k, t: k, on: f.sub === k, onPress: () => tog('sub', k) }))) : null,
+                React.createElement(Text, { style: s.h }, "Fiyat aral\u0131\u011F\u0131 (\u20BA)"),
+                React.createElement(View, { style: { flexDirection: 'row', gap: 8 } },
+                    React.createElement(TextInput, { style: [s.input, { flex: 1 }], placeholder: "Min", keyboardType: "numeric", value: f.min, onChangeText: (v) => set('min', v) }),
+                    React.createElement(TextInput, { style: [s.input, { flex: 1 }], placeholder: "Maks", keyboardType: "numeric", value: f.max, onChangeText: (v) => set('max', v) })),
+                React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap' } }, [[0, 1000], [1000, 5000], [5000, 20000]].map(([a, b]) => React.createElement(Chip, { key: a, t: `${a}–${b}`, on: f.min === '' + a && f.max === '' + b, onPress: () => setF({ ...f, min: '' + a, max: '' + b }) }))),
+                [['bargain', 'Sadece Pazarlığa Açık'], ['swap', 'Sadece Takasa Açık'], ['free', 'Sadece Ücretsizler']].map(([k, t]) => (React.createElement(View, { key: k, style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' } },
+                    React.createElement(Text, null, t),
+                    React.createElement(Switch, { value: f[k], onValueChange: (v) => set(k, v), trackColor: { true: c.p } })))),
+                React.createElement(Sec, { t: "\u00DCr\u00FCn durumu" }, [['all', 'Tümü'], ['Sıfır', 'Sıfır'], ['İkinci El', 'İkinci El']].map(([k, t]) => React.createElement(Chip, { key: k, t: t, on: f.state === k, onPress: () => set('state', k) }))),
+                f.state !== 'Sıfır' ? React.createElement(Sec, { t: "Kondisyon" }, CONDS.map((k) => React.createElement(Chip, { key: k, t: k, on: f.conds.includes(k), onPress: () => set('conds', f.conds.includes(k) ? f.conds.filter((x) => x !== k) : [...f.conds, k]) }))) : null,
+                React.createElement(Sec, { t: "\u015Eehir" }, Object.keys(CITIES).map((k) => React.createElement(Chip, { key: k, t: k, on: f.city === k, onPress: () => setF({ ...f, city: f.city === k ? null : k, district: null }) }))),
+                f.city ? React.createElement(Sec, { t: "\u0130l\u00E7e" }, CITIES[f.city].map((k) => React.createElement(Chip, { key: k, t: k, on: f.district === k, onPress: () => tog('district', k) }))) : null,
+                React.createElement(Sec, { t: "Yak\u0131n\u0131mda" }, [5, 10, 50].map((k) => React.createElement(Chip, { key: k, t: `${k} km`, on: f.km === k, onPress: () => tog('km', k) }))),
+                React.createElement(Sec, { t: "Teslimat" }, ['Elden Teslim', 'Kargo ile Gönderim', 'Ücretsiz Kargo'].map((k) => React.createElement(Chip, { key: k, t: k, on: f.deliver === k, onPress: () => tog('deliver', k) }))),
+                React.createElement(Sec, { t: "Sat\u0131c\u0131 puan\u0131" }, [3, 4, 4.5].map((k) => React.createElement(Chip, { key: k, t: `${k} ★ ve üzeri`, on: f.minRating === k, onPress: () => tog('minRating', k) }))),
+                React.createElement(Sec, { t: "\u0130lan tarihi" }, [[1, 'Son 24 saat'], [7, 'Son 7 gün'], [30, 'Son 30 gün']].map(([k, t]) => React.createElement(Chip, { key: k, t: t, on: f.date === k, onPress: () => tog('date', k) })))),
+            React.createElement(View, { style: { padding: 14 } },
+                React.createElement(Btn, { t: `${count} sonucu göster`, onPress: close })))));
+}
+function Home({ nav }) {
+    const S = useStore();
+    const [q, setQ] = useState(''), [sq, setSq] = useState(''), [f, setF] = useState(DEF), [sort, setSort] = useState('smart');
+    const [show, setShow] = useState(false), [loading, setLoading] = useState(true), [focus, setFocus] = useState(false), [recent, setRecent] = useState([]);
+    useEffect(() => { const t = setTimeout(() => setLoading(false), 700); return () => clearTimeout(t); }, []);
+    const res = useMemo(() => run(S.listings, f, q, sort, S.stats), [S.listings, f, q, sort, S.reviews]);
+    const submit = (t) => { setSq(t); setQ(t); setFocus(false); if (t.trim())
+        setRecent((r) => [t, ...r.filter((x) => x !== t)].slice(0, 5)); };
+    const sugg = q ? S.listings.filter((l) => l.title.toLowerCase().includes(q.toLowerCase())).slice(0, 5).map((l) => l.title) : [...recent, ...POPULAR];
+    const n = activeCount(f);
+    return (React.createElement(View, { style: { flex: 1 } },
+        React.createElement(View, { style: { flexDirection: 'row', padding: 10, gap: 8 } },
+            React.createElement(TextInput, { style: [s.input, { flex: 1, marginBottom: 0 }], placeholder: "\u00DCr\u00FCn ara\u2026", value: q, onChangeText: setQ, onFocus: () => setFocus(true), onSubmitEditing: () => submit(q), returnKeyType: "search" }),
+            React.createElement(TouchableOpacity, { onPress: () => setShow(true), style: [s.btn, { paddingHorizontal: 12 }] },
+                React.createElement(Text, { style: s.bt },
+                    "Filtre",
+                    n ? ` (${n})` : ''))),
+        focus && !q ? (React.createElement(View, { style: { backgroundColor: '#fff', padding: 10 } },
+            React.createElement(Text, { style: { color: c.m, marginBottom: 6 } }, q ? 'Öneriler' : 'Son ve popüler aramalar'),
+            sugg.map((t, i) => React.createElement(TouchableOpacity, { key: t + i, onPress: () => submit(t) },
+                React.createElement(Text, { style: { paddingVertical: 6 } },
+                    "\uD83D\uDD0E ",
+                    t))),
+            React.createElement(Btn, { t: "Kapat", kind: "ghost", onPress: () => setFocus(false), style: { marginTop: 6 } }))) : null,
+        React.createElement(View, { style: { height: 40 } },
+            React.createElement(ScrollView, { horizontal: true, showsHorizontalScrollIndicator: false, contentContainerStyle: { paddingHorizontal: 10 } }, SORTS.map(([k, t]) => React.createElement(Chip, { key: k, t: t, on: sort === k, onPress: () => setSort(k) })))),
+        React.createElement(View, { style: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, paddingBottom: 4 } },
+            React.createElement(Text, { style: { color: c.m } }, loading ? '…' : `${res.length} ilan`),
+            n ? React.createElement(TouchableOpacity, { onPress: () => setF(DEF) },
+                React.createElement(Text, { style: { color: c.red } }, "Filtreleri temizle")) : null),
+        loading ? (React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap', padding: 5 } }, [1, 2, 3, 4].map((i) => React.createElement(View, { key: i, style: { width: '50%', padding: 5 } },
+            React.createElement(Skeleton, null))))) : (React.createElement(FlatList, { data: res, numColumns: 2, keyExtractor: (l) => l.id, contentContainerStyle: { padding: 5 }, ListEmptyComponent: React.createElement(Empty, { t: "Sonu\u00E7 bulunamad\u0131", sub: "Filtreleri gev\u015Fetmeyi veya farkl\u0131 bir kelime aramay\u0131 dene." }), renderItem: ({ item }) => React.createElement(ListingCard, { l: item, fav: S.isFav(item.id), onFav: () => S.toggleFav(item.id), onPress: () => nav.push({ name: 'detail', id: item.id }) }) })),
+        React.createElement(FilterModal, { f: f, setF: setF, show: show, close: () => setShow(false), count: res.length })));
+}
+// ===== src/screens/Detail.js =====
+function Detail({ nav, p }) {
+    const S = useStore();
+    const l = S.allListings.find((x) => x.id === p.id);
+    if (!l)
+        return null;
+    const seller = S.users.find((u) => u.id === l.sellerId), st = S.stats(seller.id), mine = l.sellerId === S.me.id;
+    const msg = () => { if (l.status !== 'active')
+        return Alert.alert('Bu ilan yayında değil'); nav.push({ name: 'chat', id: S.openChat(l.id) }); };
+    return (React.createElement(ScrollView, { contentContainerStyle: { padding: 14 } },
+        l.images.length ? React.createElement(ScrollView, { horizontal: true }, l.images.map((u) => React.createElement(Image, { key: u, source: { uri: u }, style: { width: 300, height: 220, borderRadius: 12, marginRight: 8 } }))) : React.createElement(Thumb, { l: l, h: 220 }),
+        React.createElement(Text, { style: { fontSize: 20, fontWeight: '800', marginTop: 10 } }, l.title),
+        React.createElement(Price, { l: l, big: true }),
+        React.createElement(Text, { style: { color: c.m, marginVertical: 4 } },
+            l.state === 'Sıfır' ? 'Sıfır (Etiketli / Kutusunda)' : `İkinci El • ${l.cond}`,
+            " \u2022 ",
+            l.ptype),
+        React.createElement(Text, { style: { color: c.m } },
+            l.cat,
+            " \u203A ",
+            l.sub,
+            " \u2022 ",
+            l.city,
+            "/",
+            l.district,
+            " \u2022 ",
+            l.km,
+            " km \u2022 ",
+            ago(l.createdAt)),
+        React.createElement(Text, { style: { color: c.m } },
+            "Kargo: ",
+            l.ship,
+            " \u2022 \u2764\uFE0F ",
+            l.favCount,
+            l.status !== 'active' ? ` • ${l.status === 'sold' ? 'SATILDI' : 'Yayında değil'}` : ''),
+        React.createElement(Text, { style: { marginVertical: 10 } }, l.desc),
+        l.history.length > 1 ? React.createElement(View, { style: s.card },
+            React.createElement(Text, { style: s.h }, "Fiyat ge\u00E7mi\u015Fi"),
+            l.history.map((h, i) => React.createElement(Text, { key: i, style: { color: c.m } },
+                fmt(h.price, l.cur),
+                " \u2013 ",
+                ago(h.at)))) : null,
+        React.createElement(View, { style: s.card },
+            React.createElement(Text, { style: { fontWeight: '700' }, onPress: () => nav.push({ name: 'user', id: seller.id }) },
+                seller.name,
+                " \u203A"),
+            React.createElement(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 6 } },
+                React.createElement(Stars, { v: st.avg }),
+                React.createElement(Text, null,
+                    st.avg,
+                    " \u2605 (",
+                    st.count,
+                    ")"))),
+        mine ? React.createElement(Text, { style: { color: c.m } }, "Bu senin ilan\u0131n. Profilinden y\u00F6netebilirsin.") : (React.createElement(View, { style: { gap: 8 } },
+            React.createElement(Btn, { t: l.ptype === 'Pazarlığa Açık' ? 'Mesaj / Teklif Ver' : l.ptype === 'Takasa Açık' ? 'Mesaj / Takas Öner' : 'Satıcıya Mesaj Gönder', onPress: msg }),
+            React.createElement(Btn, { t: S.isFav(l.id) ? '❤️ Favorilerden çıkar' : '🤍 Favoriye ekle', kind: "ghost", onPress: () => S.toggleFav(l.id) }),
+            React.createElement(View, { style: { flexDirection: 'row', gap: 8 } },
+                React.createElement(Btn, { t: "\u015Eikayet Et", kind: "ghost", onPress: S.report, style: { flex: 1 } }),
+                React.createElement(Btn, { t: "Sat\u0131c\u0131y\u0131 Engelle", kind: "ghost", onPress: () => { S.block(seller.id); nav.back(); }, style: { flex: 1 } }))))));
+}
+// ===== src/screens/Chat.js =====
+function ChatList({ nav }) {
+    const S = useStore();
+    const mine = S.chats.filter((x) => x.buyerId === S.me.id || x.sellerId === S.me.id);
+    return (React.createElement(ScrollView, { contentContainerStyle: { padding: 12 } },
+        S.notes.length ? React.createElement(View, { style: s.card },
+            React.createElement(Text, { style: s.h }, "Bildirimler"),
+            S.notes.slice(0, 5).map((n) => React.createElement(Text, { key: n.id, style: { color: c.m } },
+                "\uD83D\uDD14 ",
+                n.t))) : null,
+        mine.length === 0 ? React.createElement(Empty, { icon: "\uD83D\uDCAC", t: "Hen\u00FCz sohbetin yok", sub: "Bir ilana girip sat\u0131c\u0131ya mesaj g\u00F6nder." }) : mine.map((ch) => {
+            const l = S.allListings.find((x) => x.id === ch.listingId), o = S.users.find((u) => u.id === (ch.buyerId === S.me.id ? ch.sellerId : ch.buyerId)), last = ch.msgs[ch.msgs.length - 1];
+            return (React.createElement(TouchableOpacity, { key: ch.id, style: s.card, onPress: () => nav.push({ name: 'chat', id: ch.id }) },
+                React.createElement(Text, { style: { fontWeight: '700' } },
+                    o.name,
+                    " \u2022 ",
+                    l.title),
+                React.createElement(Text, { style: { color: c.m } }, last ? (last.type === 'text' ? last.text : last.type === 'offer' ? `Teklif: ${last.amount}` : 'Takas teklifi') : 'Sohbeti başlat')));
+        })));
+}
+function Chat({ p }) {
+    const S = useStore();
+    const ch = S.chats.find((x) => x.id === p.id);
+    const l = S.allListings.find((x) => x.id === ch.listingId);
+    const [txt, setTxt] = useState(''), [mode, setMode] = useState('text'), [swapId, setSwapId] = useState(null);
+    const myListings = S.allListings.filter((x) => x.sellerId === S.me.id && x.status === 'active');
+    const isBuyer = ch.buyerId === S.me.id;
+    const go = () => {
+        if (mode === 'text' && txt.trim())
+            S.send(ch.id, { type: 'text', text: txt.trim() });
+        else if (mode === 'offer' && +txt > 0)
+            S.send(ch.id, { type: 'offer', amount: +txt, status: 'pending' });
+        else if (mode === 'swap' && swapId)
+            S.send(ch.id, { type: 'swap', text: S.allListings.find((x) => x.id === swapId).title, status: 'pending' });
+        else
+            return;
+        setTxt('');
+        setMode('text');
+    };
+    return (React.createElement(View, { style: { flex: 1 } },
+        React.createElement(Text, { style: { padding: 10, fontWeight: '700' } },
+            l.title,
+            " \u2013 ",
+            fmt(l.price, l.cur)),
+        React.createElement(FlatList, { data: ch.msgs, keyExtractor: (m) => m.id, contentContainerStyle: { padding: 10 }, ListEmptyComponent: React.createElement(Empty, { icon: "\uD83D\uDC4B", t: "Merhaba de", sub: "\u0130lk mesaj\u0131 sen g\u00F6nder." }), renderItem: ({ item: m }) => {
+                const me = m.from === S.me.id;
+                if (m.type === 'text')
+                    return React.createElement(View, { style: [s.bubble, me ? { alignSelf: 'flex-end', backgroundColor: c.p } : { alignSelf: 'flex-start', backgroundColor: '#fff' }] },
+                        React.createElement(Text, { style: { color: me ? '#fff' : c.t } }, m.text),
+                        React.createElement(Text, { style: { fontSize: 10, color: me ? '#D1FAE5' : c.m } }, ago(m.at)));
+                return React.createElement(OfferBubble, { m: m, mine: me, canAct: !me, fmtAmt: fmt(m.amount || 0, l.cur), onAccept: () => S.respond(ch.id, m.id, 'accepted'), onReject: () => S.respond(ch.id, m.id, 'rejected'), onCounter: () => { if (+txt > 0) {
+                        S.respond(ch.id, m.id, 'countered', +txt);
+                        setTxt('');
+                    }
+                    else
+                        alert('Önce aşağıya karşı teklif tutarını yaz.'); } });
+            } }),
+        l.status === 'active' ? (React.createElement(View, { style: { padding: 8, backgroundColor: '#fff' } },
+            isBuyer ? React.createElement(View, { style: { flexDirection: 'row' } },
+                React.createElement(Chip, { t: "\uD83D\uDCAC Mesaj", on: mode === 'text', onPress: () => setMode('text') }),
+                l.ptype === 'Pazarlığa Açık' ? React.createElement(Chip, { t: "\uD83D\uDCB0 Teklif", on: mode === 'offer', onPress: () => setMode('offer') }) : null,
+                l.ptype === 'Takasa Açık' ? React.createElement(Chip, { t: "\uD83D\uDD01 Takas", on: mode === 'swap', onPress: () => setMode('swap') }) : null) : React.createElement(Text, { style: { color: c.m, fontSize: 12 } }, "Kar\u015F\u0131 teklif i\u00E7in tutar\u0131 yaz\u0131p teklifin \u00FCzerindeki \u201CKar\u015F\u0131 Teklif\u201De dokun."),
+            mode === 'swap' ? (myListings.length ? React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap' } }, myListings.map((x) => React.createElement(Chip, { key: x.id, t: x.title, on: swapId === x.id, onPress: () => setSwapId(x.id) }))) : React.createElement(Text, { style: { color: c.m } }, "Takas i\u00E7in \u00F6nce kendi ilan\u0131n\u0131 yay\u0131nla.")) : null,
+            React.createElement(View, { style: { flexDirection: 'row', gap: 8 } },
+                mode !== 'swap' ? React.createElement(TextInput, { style: [s.input, { flex: 1, marginBottom: 0 }], value: txt, onChangeText: setTxt, keyboardType: mode === 'offer' ? 'numeric' : 'default', placeholder: mode === 'offer' ? 'Teklif tutarı' : 'Mesaj yaz…' }) : React.createElement(View, { style: { flex: 1 } }),
+                React.createElement(Btn, { t: "G\u00F6nder", onPress: go })))) : React.createElement(Text, { style: { padding: 12, textAlign: 'center', color: c.m } },
+            "\u0130lan ",
+            l.status === 'sold' ? 'satıldı' : 'yayında değil',
+            ". Profilinden i\u015Flemi de\u011Ferlendirebilirsin.")));
+}
+// ===== src/screens/Create.js =====
+const Row = ({ t, children }) => (React.createElement(View, null,
+    React.createElement(Text, { style: s.h }, t),
+    React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap' } }, children)));
+function Create({ nav }) {
+    const S = useStore();
+    const [f, setF] = useState({ title: '', desc: '', images: [], cat: null, sub: null, state: 'İkinci El', cond: 'İyi', price: '', cur: 'TL', ptype: 'Sabit Fiyat', ship: 'Alıcı Öder', city: S.me.city, district: null });
+    const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
+    const pick = async () => {
+        const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: (ImagePicker.MediaTypeOptions ? ImagePicker.MediaTypeOptions.Images : ['images']), allowsMultipleSelection: true, quality: 0.6 });
+        if (!r.canceled)
+            set('images', [...f.images, ...r.assets.map((a) => a.uri)].slice(0, 8));
+    };
+    const submit = () => {
+        const free = f.ptype === 'Ücretsiz';
+        if (!f.title.trim() || !f.cat || !f.sub || !f.district || (!free && !(+f.price > 0)))
+            return Alert.alert('Eksik bilgi', 'Başlık, kategori, alt kategori, ilçe ve fiyatı doldur.');
+        S.addListing({ ...f, price: free ? 0 : +f.price, cond: f.state === 'Sıfır' ? null : f.cond, km: 5 });
+        Alert.alert('Yayınlandı', 'İlanın yayında.');
+        nav.tab('home');
+    };
+    return (React.createElement(ScrollView, { contentContainerStyle: { padding: 14 } },
+        React.createElement(Text, { style: { fontSize: 20, fontWeight: '800' } }, "Yeni ilan"),
+        React.createElement(Text, { style: s.h }, "Foto\u011Fraflar (ilk foto\u011Fraf kapak)"),
+        React.createElement(ScrollView, { horizontal: true },
+            f.images.map((u, i) => (React.createElement(TouchableOpacity, { key: u, onPress: () => set('images', [u, ...f.images.filter((x) => x !== u)]) },
+                React.createElement(Image, { source: { uri: u }, style: { width: 80, height: 80, borderRadius: 8, marginRight: 6, borderWidth: i === 0 ? 3 : 0, borderColor: c.p } })))),
+            React.createElement(TouchableOpacity, { onPress: pick, style: { width: 80, height: 80, borderRadius: 8, backgroundColor: c.soft, alignItems: 'center', justifyContent: 'center' } },
+                React.createElement(Text, { style: { fontSize: 28 } }, "\uFF0B"))),
+        React.createElement(TextInput, { style: [s.input, { marginTop: 10 }], placeholder: "Ba\u015Fl\u0131k", value: f.title, onChangeText: (v) => set('title', v) }),
+        React.createElement(TextInput, { style: [s.input, { height: 90 }], multiline: true, placeholder: "A\u00E7\u0131klama", value: f.desc, onChangeText: (v) => set('desc', v) }),
+        React.createElement(Row, { t: "Kategori" }, Object.keys(CATS).map((k) => React.createElement(Chip, { key: k, t: k, on: f.cat === k, onPress: () => setF((o) => ({ ...o, cat: k, sub: null })) }))),
+        f.cat ? React.createElement(Row, { t: "Alt kategori" }, CATS[f.cat].map((k) => React.createElement(Chip, { key: k, t: k, on: f.sub === k, onPress: () => set('sub', k) }))) : null,
+        React.createElement(Row, { t: "\u00DCr\u00FCn durumu" }, ['Sıfır', 'İkinci El'].map((k) => React.createElement(Chip, { key: k, t: k === 'Sıfır' ? 'Sıfır (Etiketli / Kutusunda)' : k, on: f.state === k, onPress: () => set('state', k) }))),
+        f.state === 'İkinci El' ? React.createElement(Row, { t: "Kondisyon" }, CONDS.map((k) => React.createElement(Chip, { key: k, t: k, on: f.cond === k, onPress: () => set('cond', k) }))) : null,
+        React.createElement(Row, { t: "Fiyat t\u00FCr\u00FC" }, PTYPES.map((k) => React.createElement(Chip, { key: k, t: k, on: f.ptype === k, onPress: () => set('ptype', k) }))),
+        f.ptype !== 'Ücretsiz' ? (React.createElement(View, null,
+            React.createElement(Row, { t: "Para birimi" }, ['TL', 'USD', 'EUR'].map((k) => React.createElement(Chip, { key: k, t: k, on: f.cur === k, onPress: () => set('cur', k) }))),
+            React.createElement(TextInput, { style: s.input, placeholder: "Fiyat", keyboardType: "numeric", value: f.price, onChangeText: (v) => set('price', v) }))) : null,
+        React.createElement(Row, { t: "Kargo \u00FCcreti" }, SHIPS.map((k) => React.createElement(Chip, { key: k, t: k, on: f.ship === k, onPress: () => set('ship', k) }))),
+        React.createElement(Row, { t: "\u015Eehir" }, Object.keys(CITIES).map((k) => React.createElement(Chip, { key: k, t: k, on: f.city === k, onPress: () => setF((o) => ({ ...o, city: k, district: null })) }))),
+        React.createElement(Row, { t: "\u0130l\u00E7e" }, (CITIES[f.city] || []).map((k) => React.createElement(Chip, { key: k, t: k, on: f.district === k, onPress: () => set('district', k) }))),
+        React.createElement(Btn, { t: "\u0130lan\u0131 yay\u0131nla", onPress: submit, style: { marginTop: 16 } })));
+}
+// ===== src/screens/Profile.js =====
+function Manage({ l }) {
+    const S = useStore();
+    const [np, setNp] = useState('');
+    return (React.createElement(View, { style: s.card },
+        React.createElement(Text, { style: { fontWeight: '700' } },
+            l.title,
+            " \u2022 ",
+            fmt(l.price, l.cur),
+            " \u2022 ",
+            l.status),
+        l.status === 'active' ? (React.createElement(View, null,
+            React.createElement(View, { style: { flexDirection: 'row', gap: 6, marginTop: 6 } },
+                React.createElement(TextInput, { style: [s.input, { flex: 1, marginBottom: 0 }], placeholder: "Yeni fiyat", keyboardType: "numeric", value: np, onChangeText: setNp }),
+                React.createElement(Btn, { t: "G\u00FCncelle", onPress: () => { if (+np >= 0 && np) {
+                        S.setPrice(l.id, +np);
+                        setNp('');
+                    } }, style: s.sm })),
+            React.createElement(View, { style: { flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' } },
+                React.createElement(Btn, { t: "\u00D6ne \u00C7\u0131kar", kind: "ghost", onPress: () => S.feature(l.id), style: s.sm }),
+                React.createElement(Btn, { t: "Sat\u0131ld\u0131", kind: "ghost", onPress: () => S.setStatus(l.id, 'sold'), style: s.sm }),
+                React.createElement(Btn, { t: "Yay\u0131ndan Kald\u0131r", kind: "danger", onPress: () => S.setStatus(l.id, 'removed'), style: s.sm })))) : l.status === 'removed' ? React.createElement(Btn, { t: "Yeniden yay\u0131nla", kind: "ghost", onPress: () => S.setStatus(l.id, 'active'), style: [s.sm, { marginTop: 6 }] }) : null));
+}
+function Profile({ nav, p, own }) {
+    const S = useStore();
+    const id = own ? S.me.id : p.id, u = S.users.find((x) => x.id === id), st = S.stats(id);
+    const [tab, setTab] = useState('seller');
+    const revs = S.reviews.filter((r) => r.toId === id && r.role === tab);
+    const pending = own ? S.txs.filter((t) => (t.buyerId === id || t.sellerId === id) && !S.reviews.some((r) => r.txId === t.id && r.fromId === id)) : [];
+    return (React.createElement(ScrollView, { contentContainerStyle: { padding: 14 } },
+        React.createElement(View, { style: { alignItems: 'center' } },
+            React.createElement(View, { style: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.p, alignItems: 'center', justifyContent: 'center' } },
+                React.createElement(Text, { style: { color: '#fff', fontSize: 28 } }, u.name[0])),
+            React.createElement(Text, { style: { fontSize: 20, fontWeight: '800', marginTop: 6 } }, u.name),
+            React.createElement(Text, { style: { color: c.m } },
+                u.city,
+                " \u2022 ",
+                u.bio),
+            React.createElement(Text, { style: { fontSize: 18, marginTop: 6 } },
+                st.avg,
+                " \u2605 ",
+                React.createElement(Text, { style: { color: c.m, fontSize: 14 } },
+                    "(",
+                    st.count,
+                    " de\u011Ferlendirme)")),
+            React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 } }, S.badges(id).map((b) => React.createElement(Chip, { key: b, t: '🛡️ ' + b, on: true })))),
+        own ? (React.createElement(View, null,
+            pending.map((t) => (React.createElement(View, { key: t.id, style: s.card },
+                React.createElement(Text, null,
+                    "Tamamlanan i\u015Flem: ",
+                    S.allListings.find((l) => l.id === t.listingId).title),
+                React.createElement(Btn, { t: "De\u011Ferlendir", onPress: () => nav.push({ name: 'review', id: t.id }), style: { marginTop: 6 } })))),
+            React.createElement(Text, { style: s.h }, "\u0130lanlar\u0131m"),
+            S.allListings.filter((l) => l.sellerId === id).map((l) => React.createElement(Manage, { key: l.id, l: l })),
+            React.createElement(Text, { style: s.h }, "Demo: kullan\u0131c\u0131 de\u011Fi\u015Ftir (al\u0131c\u0131/sat\u0131c\u0131 rol\u00FCn\u00FC test et)"),
+            React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap' } }, S.users.map((x) => React.createElement(Chip, { key: x.id, t: x.name, on: x.id === id, onPress: () => S.switchUser(x.id) }))),
+            React.createElement(Btn, { t: "\u00C7\u0131k\u0131\u015F yap", kind: "ghost", onPress: S.logout, style: { marginTop: 10 } }))) : (React.createElement(View, { style: { flexDirection: 'row', gap: 8, marginTop: 10 } },
+            React.createElement(Btn, { t: "\u015Eikayet Et", kind: "ghost", onPress: S.report, style: { flex: 1 } }),
+            React.createElement(Btn, { t: "Engelle", kind: "ghost", onPress: () => { S.block(id); nav.back(); }, style: { flex: 1 } }))),
+        React.createElement(View, { style: { flexDirection: 'row', marginTop: 14 } },
+            React.createElement(Chip, { t: "Sat\u0131c\u0131 Yorumlar\u0131", on: tab === 'seller', onPress: () => setTab('seller') }),
+            React.createElement(Chip, { t: "Al\u0131c\u0131 Yorumlar\u0131", on: tab === 'buyer', onPress: () => setTab('buyer') })),
+        revs.length === 0 ? React.createElement(Empty, { icon: "\u2B50", t: "Hen\u00FCz yorum yok" }) : revs.map((r) => (React.createElement(View, { key: r.id, style: s.card },
+            React.createElement(Stars, { v: r.stars }),
+            React.createElement(Text, { style: { marginTop: 4 } }, r.text),
+            React.createElement(Text, { style: { color: c.m, fontSize: 12 } },
+                r.tags.join(' • '),
+                " ",
+                ago(r.at)))))));
+}
+function Review({ nav, p }) {
+    const S = useStore();
+    const tx = S.txs.find((t) => t.id === p.id);
+    const toId = tx.buyerId === S.me.id ? tx.sellerId : tx.buyerId, role = toId === tx.sellerId ? 'seller' : 'buyer';
+    const [stars, setStars] = useState(0), [text, setText] = useState(''), [tags, setTags] = useState([]);
+    const submit = () => { const e = S.addReview(tx.id, toId, stars, text, tags); if (e)
+        Alert.alert('Uyarı', e);
+    else {
+        Alert.alert('Teşekkürler', 'Değerlendirmen profile işlendi.');
+        nav.back();
+    } };
+    return (React.createElement(ScrollView, { contentContainerStyle: { padding: 14 } },
+        React.createElement(Text, { style: { fontSize: 18, fontWeight: '800' } },
+            S.users.find((u) => u.id === toId).name,
+            " de\u011Ferlendir"),
+        React.createElement(View, { style: { marginVertical: 10 } },
+            React.createElement(Stars, { v: stars, size: 38, onChange: setStars })),
+        React.createElement(View, { style: { flexDirection: 'row', flexWrap: 'wrap' } }, TAGS[role].map((t) => React.createElement(Chip, { key: t, t: t, on: tags.includes(t), onPress: () => setTags(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]) }))),
+        React.createElement(TextInput, { style: [s.input, { height: 100, marginTop: 10 }], multiline: true, placeholder: "Yorumunu yaz\u2026", value: text, onChangeText: setText }),
+        React.createElement(Btn, { t: "De\u011Ferlendirmeyi g\u00F6nder", onPress: submit })));
+}
+// ===== App.js =====
+function Login() {
+    const S = useStore();
+    return (React.createElement(View, { style: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: c.bg } },
+        React.createElement(Text, { style: { fontSize: 32, fontWeight: '800', color: c.p } }, "Çarşı"),
+        React.createElement(Text, { style: { color: c.m, marginBottom: 20 } }, "S\u0131f\u0131r ve ikinci el, g\u00FCvenle al-sat."),
+        React.createElement(TextInput, { style: s.input, placeholder: "E-posta veya telefon", autoCapitalize: "none" }),
+        React.createElement(TextInput, { style: s.input, placeholder: "\u015Eifre", secureTextEntry: true }),
+        React.createElement(Btn, { t: "Giri\u015F yap / Kay\u0131t ol", onPress: S.login }),
+        React.createElement(Btn, { t: "Google ile devam et", kind: "ghost", onPress: S.login, style: { marginTop: 8 } }),
+        React.createElement(Text, { style: { color: c.m, fontSize: 12, marginTop: 10 } }, "MVP: giri\u015F demo modundad\u0131r (Supabase Auth ba\u011Flant\u0131s\u0131 README\u2019de).")));
+}
+function Root() {
+    const S = useStore();
+    const [tab, setTab] = useState('home'), [stack, setStack] = useState([]);
+    if (!S.me)
+        return React.createElement(Login, null);
+    const nav = { push: (x) => setStack((a) => [...a, x]), back: () => setStack((a) => a.slice(0, -1)), tab: (t) => { setStack([]); setTab(t); } };
+    const top = stack[stack.length - 1];
+    const V = top ? { detail: Detail, chat: Chat, user: Profile, review: Review }[top.name] : { home: Home, create: Create, chats: ChatList, me: Profile }[tab];
+    const tabs = [['home', '🏠', 'Ana Sayfa'], ['create', '➕', 'İlan Ver'], ['chats', '💬', 'Mesajlar'], ['me', '👤', 'Profil']];
+    return (React.createElement(SafeAreaView, { style: { flex: 1, backgroundColor: c.bg, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 } },
+        top ? React.createElement(TouchableOpacity, { onPress: nav.back, style: { padding: 12 } },
+            React.createElement(Text, { style: { color: c.p, fontWeight: '700' } }, "\u2039 Geri")) : null,
+        React.createElement(View, { style: { flex: 1 } },
+            React.createElement(V, { nav: nav, p: top, own: !top && tab === 'me' })),
+        React.createElement(View, { style: { flexDirection: 'row', borderTopWidth: 1, borderColor: c.line, backgroundColor: '#fff' } }, tabs.map(([k, i, t]) => (React.createElement(TouchableOpacity, { key: k, onPress: () => nav.tab(k), style: { flex: 1, alignItems: 'center', padding: 8 } },
+            React.createElement(Text, { style: { fontSize: 20 } }, i),
+            React.createElement(Text, { style: { fontSize: 11, color: !top && tab === k ? c.p : c.m, fontWeight: !top && tab === k ? '700' : '400' } }, t)))))));
+}
+function App() { return React.createElement(Provider, null,
+    React.createElement(Root, null)); }
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+})();
+</script></body></html>
